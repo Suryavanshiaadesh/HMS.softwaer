@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Registration</title>
+
+  <!-- ✅ Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+      font-family: 'Poppins', sans-serif;
+    }
+    .registration-form {
+      background-color: #fff;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 30px;
+      max-width: 600px;
+      margin: 50px auto;
+    }
+    .form-title {
+      text-align: center;
+      color: #0d6efd;
+      margin-bottom: 25px;
+      font-weight: 600;
+    }
+    .form-section-title {
+      color: #495057;
+      font-size: 1.2rem;
+      border-bottom: 2px solid #0d6efd;
+      padding-bottom: 5px;
+      margin-top: 25px;
+      margin-bottom: 15px;
+      font-weight: 500;
+    }
+    button {
+      width: 100%;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="registration-form">
+    <h2 class="form-title">🎓 Student Registration</h2>
+
+    <form th:action="@{/saveStudent}" th:object="${student}" method="post">
+
+      <!-- Student Info -->
+      <div class="mb-3">
+        <label class="form-label">Full Name</label>
+        <input type="text" th:field="*{name}" class="form-control" placeholder="Enter student name" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Mobile Number</label>
+        <input type="text" th:field="*{mobileNumber}" class="form-control" placeholder="Enter mobile number" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Parent Mobile Number</label>
+        <input type="text" th:field="*{parentMobileNumber}" class="form-control" placeholder="Enter parent’s mobile number">
+      </div>
+
+      <!-- Address Section -->
+      <div class="form-section-title">🏠 Address</div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">City</label>
+          <input type="text" th:field="*{address.city}" class="form-control" placeholder="Enter city">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">State</label>
+          <input type="text" th:field="*{address.state}" class="form-control" placeholder="Enter state">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Pincode</label>
+        <input type="text" th:field="*{address.pincode}" class="form-control" placeholder="Enter pincode">
+      </div>
+
+      <!-- Due Date -->
+      <div class="mb-3">
+        <label class="form-label">Due Date</label>
+        <input type="date" th:field="*{dueDate}" class="form-control">
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="btn btn-primary">💾 Save Student</button>
+
+    </form>
+  </div>
+
+  <!-- ✅ Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Sidebar with Profile Section</title>
+
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+<style>
+:root {
+    --sidebar-width: 280px;
+    --sidebar-width-collapsed: 80px;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    overflow-x: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: #4169E1;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    position: fixed;
+    z-index: 10;
+}
+
+.sidebar.collapsed {
+    width: var(--sidebar-width-collapsed);
+}
+
+/* Sidebar links */
+.sidebar-link {
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    margin: 4px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #000;
+    transform: translateX(5px);
+}
+
+.sidebar-link i {
+    margin-right: 10px;
+}
+
+/* Logo */
+.logo-text {
+    background: linear-gradient(45deg, #ffffff, #000000);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* Profile Section */
+.profile-section {
+    margin-top: auto;
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.profile-section img {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ffffff;
+}
+
+.profile-info {
+    margin-left: 15px;
+    color: #ffffff;
+}
+
+.profile-info h6 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.profile-info small {
+    color: #d1d1d1;
+}
+
+/* Toggle button */
+.toggle-btn {
+    position: absolute;
+    right: -15px;
+    top: 20px;
+    background: #ffffff;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease;
+}
+
+.sidebar.collapsed .toggle-btn {
+    transform: rotate(180deg);
+}
+
+/* Hide text on collapse */
+.sidebar.collapsed .profile-info,
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .sidebar-link span {
+    display: none;
+}
+
+/* Side panel */
+.side-panel {
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+    height: 100%;
+    background: #ffffff;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 20;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.side-panel.active {
+    transform: translateX(0);
+}
+
+.close-btn {
+    background: #4169E1;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    float: right;
+}
+
+/* Student Dropdown Links */
+#studentDropdown .sidebar-link {
+    margin: 4px 0;
+    padding-left: 20px;
+    background: rgba(255,255,255,0.1);
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <button class="toggle-btn" onclick="toggleSidebar()">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <div style="padding: 20px;">
+        <div class="logo-text">Aadis Hostel</div>
+        <div style="color: #d1d1d1; font-size: 14px;">Dashboard</div>
+    </div>
+
+    <a class="sidebar-link" onclick="openPanel('Dashboard')"><i class="fas fa-home"></i><span>Dashboard</span></a>
+    <a class="sidebar-link" onclick="openPanel('Analytics')"><i class="fas fa-chart-bar"></i><span>Analytics</span></a>
+
+    <!-- Student Dropdown -->
+    <a class="sidebar-link" onclick="toggleStudentDropdown()">
+        <i class="fas fa-users"></i><span>Student</span>
+        <i class="fas fa-caret-down" style="margin-left:auto;"></i>
+    </a>
+    <div id="studentDropdown" style="display:none; flex-direction:column; margin-left:30px;">
+        <a class="sidebar-link" onclick="openPanel('Student1')"><span>New Student</span></a>
+        <a class="sidebar-link" onclick="openPanel('Student2')"><span>Vacant Room</span></a>
+        <a class="sidebar-link" onclick="openPanel('Student3')"><span>Add Student</span></a>
+        <a class="sidebar-link" onclick="openPanel('Vacant')"><span>Vacant</span></a>
+    </div>
+
+    <a class="sidebar-link" onclick="openPanel('DuePayments')"><i class="fas fa-box"></i><span>Due Payments</span></a>
+    <a class="sidebar-link" onclick="openPanel('Settings')"><i class="fas fa-gear"></i><span>Settings</span></a>
+
+    <div class="profile-section">
+        <img src="https://randomuser.me/api/portraits/women/70.jpg" alt="Profile">
+        <div class="profile-info">
+            <h6>Alex Morgan</h6>
+            <small>Admin</small>
+        </div>
+    </div>
+</div>
+
+<!-- Side Panel -->
+<div id="sidePanel" class="side-panel">
+    <button class="close-btn" onclick="closePanel()">Close</button>
+    <div id="panelContent"></div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('collapsed');
+}
+
+function toggleStudentDropdown() {
+    const dropdown = document.getElementById('studentDropdown');
+    dropdown.style.display = (dropdown.style.display === 'flex') ? 'none' : 'flex';
+}
+
+function openPanel(section) {
+    const panel = document.getElementById('sidePanel');
+    const content = document.getElementById('panelContent');
+
+    switch(section) {
+        case 'Dashboard':
+            content.innerHTML = `<div class="container mt-3"><h3>Dashboard</h3><p class="text-muted">Overview of your system.</p></div>`;
+            break;
+
+        case 'Analytics':
+            content.innerHTML = `<div class="container mt-3"><h3>Analytics</h3><p class="text-muted">View your analytics here.</p></div>`;
+            break;
+
+        case 'Student3':
+            content.innerHTML = `
+                <div class="container mt-3">
+                    <h3 class="mb-3">Add Student</h3>
+                    <form id="saveStudent" class="p-3 border rounded bg-light">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Name</label>
+                                <input type="text" name="name" class="form-control mb-3" required>
+
+                                <label class="form-label">Mobile Number</label>
+                                <input type="number" name="mobileNumber" class="form-control mb-3" required>
+
+                                <label class="form-label">Parent Mobile Number</label>
+                                <input type="number" name="parentMobileNumber" class="form-control mb-3" required>
+
+                                <label class="form-label">Aadhar Card</label>
+                                <input type="file" name="aadharCard" class="form-control mb-3" accept="image/*" required>
+
+                                <label class="form-label">PAN Card</label>
+                                <input type="file" name="panCard" class="form-control mb-3" accept="image/*" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <fieldset class="border p-3 rounded">
+                                    <legend class="w-auto px-2">Address</legend>
+                                    <label class="form-label">City</label>
+                                    <input type="text" name="address.city" class="form-control mb-2">
+                                    <label class="form-label">State</label>
+                                    <input type="text" name="address.state" class="form-control mb-2">
+                                    <label class="form-label">Pincode</label>
+                                    <input type="text" name="address.pincode" class="form-control mb-2">
+                                </fieldset>
+
+                                <label class="form-label mt-3">Due Date</label>
+                                <input type="date" name="dueDate" class="form-control mb-3">
+                                <button type="submit" class="btn btn-primary w-100">Save Student</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>`;
+
+            const form = document.getElementById("saveStudent");
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const formData = new FormData(form);
+                const getBase64 = (file) => new Promise((resolve, reject) => {
+                    if (!file) return resolve(null);
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const result = reader.result;
+                        if (result && result.includes(",")) resolve(result.split(",")[1]);
+                        else reject("Invalid file data");
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+
+                try {
+                    const aadharBase64 = await getBase64(formData.get("aadharCard"));
+                    const panBase64 = await getBase64(formData.get("panCard"));
+
+                    const student = {
+                        name: formData.get("name"),
+                        mobileNumber: formData.get("mobileNumber"),
+                        parentMobileNumber: formData.get("parentMobileNumber"),
+                        dueDate: formData.get("dueDate"),
+                        address: {
+                            city: formData.get("address.city"),
+                            state: formData.get("address.state"),
+                            pincode: formData.get("address.pincode")
+                        },
+                        aadharCard: aadharBase64,
+                        panCard: panBase64
+                    };
+
+                    console.log("Payload:", student);
+
+                    const response = await fetch("/saveStudentForm", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(student)
+                    });
+
+                    const result = await response.text();
+                    console.log("Server response:", result);
+
+                    if (!response.ok) throw new Error(result);
+
+                    const userData = {
+                        userName: student.mobileNumber,
+                        passWord: generateUsername(student.name),
+                        roll: "student"
+                    };
+                    createUser(userData);
+
+                    Swal.fire({
+                        title: "Saved Successfully! 🎉",
+                        text: `${student.name} has been saved successfully.`,
+                        icon: 'success'
+                    });
+                    form.reset();
+                } catch (err) {
+                    Swal.fire({
+                        title: "Error!",
+                        text: `Something went wrong: ${err}`,
+                        icon: "error"
+                    });
+                }
+            });
+
+            function generateUsername(fullName) {
+                if (!fullName) return "";
+                const parts = fullName.trim().split(" ");
+                const firstName = parts[0];
+                return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase() + "@123";
+            }
+
+            function createUser(userData) {
+                fetch("/createUsers", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(userData)
+                })
+                .then(res => res.json())
+                .then(data => console.log("User created:", data))
+                .catch(err => console.error("User creation failed:", err));
+            }
+            break;
+    }
+
+    panel.classList.add('active');
+}
+
+function closePanel() {
+    document.getElementById('sidePanel').classList.remove('active');
+}
+
+window.onload = function() {
+    openPanel('Dashboard');
+};
+</script>
+</body>
+</html>

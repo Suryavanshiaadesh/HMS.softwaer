@@ -1,5 +1,6 @@
 package com.ss.users;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.ss.student.StudentRepo;
@@ -22,6 +23,11 @@ public class UserService {
 	public UsersTable saveUser(UsersTable user) {
 		return userRepo.save(user);
 		
+	}
+
+	public List<UsersTable> getAllUsers() {
+		// TODO Auto-generated method stub
+		return userRepo.findAll();
 	}
 	
 	

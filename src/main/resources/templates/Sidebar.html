@@ -1,387 +1,954 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Sidebar with Profile Section</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Aadis Hostel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4cc9f0;
+            --sidebar-bg: #1e1e2d;
+            --sidebar-width: 280px;
+            --sidebar-collapsed: 80px;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-<!-- Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        body {
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f4f7fe;
+            color: #2b3674;
+            overflow-x: hidden;
+        }
 
-<!-- Font Awesome -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+        /* Sidebar Styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--sidebar-bg);
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+        }
 
-<style>
-:root {
-    --sidebar-width: 280px;
-    --sidebar-width-collapsed: 80px;
-}
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed);
+        }
 
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    overflow-x: hidden;
-}
+        .sidebar-header {
+            padding: 30px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-/* Sidebar */
-.sidebar {
-    width: var(--sidebar-width);
-    height: 100vh;
-    background: #4169E1;
-    display: flex;
-    flex-direction: column;
-    transition: width 0.3s ease;
-    position: fixed;
-    z-index: 10;
-}
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
 
-.sidebar.collapsed {
-    width: var(--sidebar-width-collapsed);
-}
+        .logo-text {
+            font-size: 22px;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.5px;
+            white-space: nowrap;
+            opacity: 1;
+            transition: var(--transition);
+        }
 
-/* Sidebar links */
-.sidebar-link {
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    padding: 10px 16px;
-    margin: 4px 16px;
-    border-radius: 8px;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
+        .sidebar.collapsed .logo-text {
+            opacity: 0;
+            visibility: hidden;
+        }
 
-.sidebar-link:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: #000;
-    transform: translateX(5px);
-}
+        .sidebar-menu {
+            flex: 1;
+            padding: 10px 15px;
+            list-style: none;
+            margin: 0;
+        }
 
-.sidebar-link i {
-    margin-right: 10px;
-}
+        .sidebar-link {
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: var(--transition);
+            cursor: pointer;
+            white-space: nowrap;
+        }
 
-/* Logo */
-.logo-text {
-    background: linear-gradient(45deg, #ffffff, #000000);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 5px;
-}
+        .sidebar-link:hover, .sidebar-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
 
-/* Profile Section */
-.profile-section {
-    margin-top: auto;
-    padding: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    display: flex;
-    align-items: center;
-    transition: all 0.3s ease;
-}
+        .sidebar-link i {
+            font-size: 20px;
+            width: 24px;
+            margin-right: 15px;
+            text-align: center;
+        }
 
-.profile-section img {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #ffffff;
-}
+        .sidebar.collapsed .sidebar-link span {
+            display: none;
+        }
 
-.profile-info {
-    margin-left: 15px;
-    color: #ffffff;
-}
+        .sidebar.collapsed .sidebar-link i {
+            margin-right: 0;
+        }
 
-.profile-info h6 {
-    margin: 0;
-    font-size: 16px;
-}
+        /* Profile Section */
+        .profile-section {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-.profile-info small {
-    color: #d1d1d1;
-}
+        .profile-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
 
-/* Toggle button */
-.toggle-btn {
-    position: absolute;
-    right: -15px;
-    top: 20px;
-    background: #ffffff;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    transition: transform 0.3s ease;
-}
+        .profile-info {
+            color: white;
+            overflow: hidden;
+        }
 
-.sidebar.collapsed .toggle-btn {
-    transform: rotate(180deg);
-}
+        .profile-info h6 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 14px;
+        }
 
-/* Hide text on collapse */
-.sidebar.collapsed .profile-info,
-.sidebar.collapsed .logo-text,
-.sidebar.collapsed .sidebar-link span {
-    display: none;
-}
+        .profile-info small {
+            opacity: 0.6;
+            font-size: 12px;
+        }
 
-/* Side panel */
-.side-panel {
-    position: fixed;
-    top: 0;
-    left: var(--sidebar-width);
-    width: calc(100% - var(--sidebar-width));
-    height: 100%;
-    background: #ffffff;
-    box-shadow: 2px 0 8px rgba(0,0,0,0.2);
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-    z-index: 20;
-    padding: 20px;
-    overflow-y: auto;
-}
+        .sidebar.collapsed .profile-info {
+            display: none;
+        }
 
-.side-panel.active {
-    transform: translateX(0);
-}
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 40px;
+            transition: var(--transition);
+            min-height: 100vh;
+        }
 
-.close-btn {
-    background: #4169E1;
-    color: #fff;
-    border: none;
-    padding: 6px 12px;
-    cursor: pointer;
-    border-radius: 4px;
-    float: right;
-}
+        .sidebar.collapsed ~ .main-content {
+            margin-left: var(--sidebar-collapsed);
+        }
 
-/* Student Dropdown Links */
-#studentDropdown .sidebar-link {
-    margin: 4px 0;
-    padding-left: 20px;
-    background: rgba(255,255,255,0.1);
-}
-</style>
+        /* Side Panel Styling */
+        .side-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: calc(100% - var(--sidebar-width));
+            height: 100%;
+            background: #f4f7fe;
+            z-index: 900;
+            transform: translateX(100%);
+            transition: var(--transition);
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .sidebar.collapsed ~ .side-panel {
+            width: calc(100% - var(--sidebar-collapsed));
+        }
+
+        .side-panel.active {
+            transform: translateX(0);
+        }
+
+        .close-btn {
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            color: var(--primary);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Cards & UI Elements */
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            border: none;
+            transition: var(--transition);
+            height: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .icon-blue { background: #e7eefb; color: #4361ee; }
+        .icon-green { background: #e6f6f4; color: #05cd99; }
+        .icon-orange { background: #fef5ee; color: #ff9966; }
+        .icon-purple { background: #f4f1fd; color: #6a11cb; }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1b2559;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #a3aed0;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            margin-top: 30px;
+        }
+
+        .table thead th {
+            background: transparent;
+            border-bottom: 1px solid #f1f4f9;
+            color: #a3aed0;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            padding: 15px;
+        }
+
+        .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+            color: #2b3674;
+            font-weight: 600;
+            border-bottom: 1px solid #f1f4f9;
+        }
+
+        .badge-success { background: #e6f6f4; color: #05cd99; }
+        .badge-danger { background: #fdeef1; color: #ee5d50; }
+
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+            border-radius: 12px;
+            padding: 10px 24px;
+            font-weight: 700;
+            box-shadow: 0 4px 14px 0 rgba(67, 97, 238, 0.39);
+        }
+
+        .form-control, .form-select {
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 2px solid #f1f4f9;
+            background: #f4f7fe;
+        }
+
+        .form-control:focus {
+            background: white;
+            border-color: var(--primary);
+            box-shadow: none;
+        }
+
+        /* Notifications */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            padding: 4px 6px;
+            border-radius: 50%;
+            font-size: 10px;
+        }
+
+        .complaint-item {
+            padding: 20px;
+            border-radius: 16px;
+            background: #f8f9fa;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary);
+            transition: var(--transition);
+        }
+
+        .complaint-item:hover {
+            background: white;
+            box-shadow: var(--card-shadow);
+        }
+    </style>
 </head>
-
 <body>
 
-<div class="sidebar">
-    <button class="toggle-btn" onclick="toggleSidebar()">
-        <i class="fas fa-chevron-left"></i>
-    </button>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon"><i class="fas fa-hotel"></i></div>
+            <div class="logo-text">Aadis Hostel</div>
+        </div>
 
-    <div style="padding: 20px;">
-        <div class="logo-text">Aadis Hostel</div>
-        <div style="color: #d1d1d1; font-size: 14px;">Dashboard</div>
-    </div>
+        <div class="sidebar-menu">
+            <a class="sidebar-link active" onclick="openPanel('Dashboard')">
+                <i class="fas fa-th-large"></i><span>Dashboard</span>
+            </a>
+            <a class="sidebar-link" onclick="openPanel('StudentList')">
+                <i class="fas fa-user-graduate"></i><span>Student List</span>
+            </a>
+            <a class="sidebar-link" onclick="openPanel('AddStudent')">
+                <i class="fas fa-user-plus"></i><span>Add Student</span>
+            </a>
+            <a class="sidebar-link" onclick="openPanel('Rooms')">
+                <i class="fas fa-bed"></i><span>Manage Rooms</span>
+            </a>
+            <a class="sidebar-link" onclick="openPanel('VacantRooms')">
+                <i class="fas fa-door-open"></i><span>Vacant Rooms</span>
+            </a>
+            <a class="sidebar-link" onclick="openPanel('DuePayments')">
+                <i class="fas fa-wallet"></i><span>Due Payments</span>
+            </a>
+        </div>
 
-    <a class="sidebar-link" onclick="openPanel('Dashboard')"><i class="fas fa-home"></i><span>Dashboard</span></a>
-    <a class="sidebar-link" onclick="openPanel('Analytics')"><i class="fas fa-chart-bar"></i><span>Analytics</span></a>
-
-    <!-- Student Dropdown -->
-    <a class="sidebar-link" onclick="toggleStudentDropdown()">
-        <i class="fas fa-users"></i><span>Student</span>
-        <i class="fas fa-caret-down" style="margin-left:auto;"></i>
-    </a>
-    <div id="studentDropdown" style="display:none; flex-direction:column; margin-left:30px;">
-        <a class="sidebar-link" onclick="openPanel('Student1')"><span>New Student</span></a>
-        <a class="sidebar-link" onclick="openPanel('Student2')"><span>Vacant Room</span></a>
-        <a class="sidebar-link" onclick="openPanel('Student3')"><span>Add Student</span></a>
-        <a class="sidebar-link" onclick="openPanel('Vacant')"><span>Vacant</span></a>
-    </div>
-
-    <a class="sidebar-link" onclick="openPanel('DuePayments')"><i class="fas fa-box"></i><span>Due Payments</span></a>
-    <a class="sidebar-link" onclick="openPanel('Settings')"><i class="fas fa-gear"></i><span>Settings</span></a>
-
-    <div class="profile-section">
-        <img src="https://randomuser.me/api/portraits/women/70.jpg" alt="Profile">
-        <div class="profile-info">
-            <h6>Alex Morgan</h6>
-            <small>Admin</small>
+        <div class="profile-section">
+            <img src="/assets/user_image.jpg" class="profile-img" alt="Admin">
+            <div class="profile-info">
+                <h6>Admin Manager</h6>
+                <small>Hostel Administrator</small>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Side Panel -->
-<div id="sidePanel" class="side-panel">
-    <button class="close-btn" onclick="closePanel()">Close</button>
-    <div id="panelContent"></div>
-</div>
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div id="dashboardHome">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-800">Overview</h2>
+                <div class="position-relative" style="cursor:pointer" onclick="toggleNotifications()">
+                    <div class="stat-icon icon-blue mb-0" style="width:45px; height:45px; font-size:18px">
+                        <i class="fas fa-bell"></i>
+                        <span id="notiCount" class="badge bg-danger notification-badge">0</span>
+                    </div>
+                </div>
+            </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon icon-blue"><i class="fas fa-users"></i></div>
+                        <div class="stat-value" id="studentCount">0</div>
+                        <div class="stat-label">Total Students</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon icon-purple"><i class="fas fa-door-closed"></i></div>
+                        <div class="stat-value" id="roomCount">0</div>
+                        <div class="stat-label">Total Rooms</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon icon-green"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-value" id="vacantCount">0</div>
+                        <div class="stat-label">Vacant Rooms</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon icon-orange"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="stat-value" id="dueCount">0</div>
+                        <div class="stat-label">Due Payments</div>
+                    </div>
+                </div>
+            </div>
 
-<script>
-function toggleSidebar() {
-    document.querySelector('.sidebar').classList.toggle('collapsed');
-}
+            <div id="notificationBox" class="mt-5" style="display:none;">
+                <div class="table-card">
+                    <h5 class="fw-700 mb-4">Recent Complaints</h5>
+                    <div id="complaintList"></div>
+                </div>
+            </div>
 
-function toggleStudentDropdown() {
-    const dropdown = document.getElementById('studentDropdown');
-    dropdown.style.display = (dropdown.style.display === 'flex') ? 'none' : 'flex';
-}
+            <div class="table-card mt-5">
+                <h5 class="fw-700 mb-4">Pending Complaints</h5>
+                <div id="complaints">
+                    <p class="text-muted">No pending complaints at the moment.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-function openPanel(section) {
-    const panel = document.getElementById('sidePanel');
-    const content = document.getElementById('panelContent');
+    <!-- Side Panel for Dynamic Content -->
+    <div id="sidePanel" class="side-panel">
+        <button class="close-btn" onclick="closePanel()"><i class="fas fa-times"></i></button>
+        <div id="panelContent"></div>
+    </div>
 
-    switch(section) {
-        case 'Dashboard':
-            content.innerHTML = `<div class="container mt-3"><h3>Dashboard</h3><p class="text-muted">Overview of your system.</p></div>`;
-            break;
+    <script>
+    
+   fetch('/getStudentCount')
+    .then(response => response.json())
+    .then(data => {
+			document.getElementById('studentCount').innerText = data;
+	})    
+	.catch(error => console.error('Error:', error));
+ 
+    fetch('/getCountOfRooms')
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('roomCount').innerText = data;
+    })
+	.catch(error => console.error('Error:', error));
+    
+    fetch('/getCountofVacantRooms')
+    .then(response => response.json())
+    .then(data => {
+		document.getElementById('vacantCount').innerText = data;	
+    })
+    .catch(error => console.error('Error:',error));
+    
+    fetch('/getDueStudentCount')
+    .then(response => response.json())
+    .then(data => {
+		document.getElementById('dueCount').innerText = data;
+    })
+    .catch(error => console.error('Error:',error));
+    
 
-        case 'Analytics':
-            content.innerHTML = `<div class="container mt-3"><h3>Analytics</h3><p class="text-muted">View your analytics here.</p></div>`;
-            break;
+    /* // WebSocket Logic */
+        let stompClient = null;
+        let isConnected = false;
+        let notifications = [];
+        let receivedMessages = new Set();
 
-        case 'Student3':
-            content.innerHTML = `
-                <div class="container mt-3">
-                    <h3 class="mb-3">Add Student</h3>
-                    <form id="saveStudent" class="p-3 border rounded bg-light">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label class="form-label">Name</label>
-                                <input type="text" name="name" class="form-control mb-3" required>
-
-                                <label class="form-label">Mobile Number</label>
-                                <input type="number" name="mobileNumber" class="form-control mb-3" required>
-
-                                <label class="form-label">Parent Mobile Number</label>
-                                <input type="number" name="parentMobileNumber" class="form-control mb-3" required>
-
-                                <label class="form-label">Aadhar Card</label>
-                                <input type="file" name="aadharCard" class="form-control mb-3" accept="image/*" required>
-
-                                <label class="form-label">PAN Card</label>
-                                <input type="file" name="panCard" class="form-control mb-3" accept="image/*" required>
-                            </div>
-
-                            <div class="col-md-6">
-                                <fieldset class="border p-3 rounded">
-                                    <legend class="w-auto px-2">Address</legend>
-                                    <label class="form-label">City</label>
-                                    <input type="text" name="address.city" class="form-control mb-2">
-                                    <label class="form-label">State</label>
-                                    <input type="text" name="address.state" class="form-control mb-2">
-                                    <label class="form-label">Pincode</label>
-                                    <input type="text" name="address.pincode" class="form-control mb-2">
-                                </fieldset>
-
-                                <label class="form-label mt-3">Due Date</label>
-                                <input type="date" name="dueDate" class="form-control mb-3">
-                                <button type="submit" class="btn btn-primary w-100">Save Student</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>`;
-
-            const form = document.getElementById("saveStudent");
-            form.addEventListener("submit", async (e) => {
-                e.preventDefault();
-
-                const formData = new FormData(form);
-                const getBase64 = (file) => new Promise((resolve, reject) => {
-                    if (!file) return resolve(null);
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        const result = reader.result;
-                        if (result && result.includes(",")) resolve(result.split(",")[1]);
-                        else reject("Invalid file data");
-                    };
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
+        function connectAdminSocket() {
+            if (isConnected) return;
+            let socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, function () {
+                isConnected = true;
+                stompClient.subscribe('/topic/messages', function (data) {
+                    let msg = JSON.parse(data.body);
+                    let key = msg.studentName + msg.content + msg.roomNumber;
+                    if (receivedMessages.has(key)) return;
+                    receivedMessages.add(key);
+                    notifications.push(msg);
+                    updateNotificationUI();
                 });
+            });
+        }
 
-                try {
-                    const aadharBase64 = await getBase64(formData.get("aadharCard"));
-                    const panBase64 = await getBase64(formData.get("panCard"));
+        function updateNotificationUI() {
+            let countEl = document.getElementById("notiCount");
+            let list = document.getElementById("complaintList");
+            if (!countEl || !list) return;
+            countEl.innerText = notifications.length;
+            list.innerHTML = "";
+            notifications.forEach(msg => {
+                let div = document.createElement("div");
+                div.className = "complaint-item";
+                div.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="fw-700 mb-1">${msg.studentName} ${msg.roomNumber ? `<span class="text-muted">(Room ${msg.roomNumber})</span>` : ''}</h6>
+                            <p class="mb-0 text-muted">${msg.content}</p>
+                        </div>
+                        <span class="badge badge-danger">New</span>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
 
-                    const student = {
-                        name: formData.get("name"),
-                        mobileNumber: formData.get("mobileNumber"),
-                        parentMobileNumber: formData.get("parentMobileNumber"),
-                        dueDate: formData.get("dueDate"),
-                        address: {
-                            city: formData.get("address.city"),
-                            state: formData.get("address.state"),
-                            pincode: formData.get("address.pincode")
-                        },
-                        aadharCard: aadharBase64,
-                        panCard: panBase64
-                    };
+        function toggleNotifications() {
+            let box = document.getElementById("notificationBox");
+            box.style.display = (box.style.display === "none") ? "block" : "none";
+        }
 
-                    console.log("Payload:", student);
-
-                    const response = await fetch("/saveStudentForm", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(student)
-                    });
-
-                    const result = await response.text();
-                    console.log("Server response:", result);
-
-                    if (!response.ok) throw new Error(result);
-
-                    const userData = {
-                        userName: student.mobileNumber,
-                        passWord: generateUsername(student.name),
-                        roll: "student"
-                    };
-                    createUser(userData);
-
-                    Swal.fire({
-                        title: "Saved Successfully! 🎉",
-                        text: `${student.name} has been saved successfully.`,
-                        icon: 'success'
-                    });
-                    form.reset();
-                } catch (err) {
-                    Swal.fire({
-                        title: "Error!",
-                        text: `Something went wrong: ${err}`,
-                        icon: "error"
-                    });
-                }
+        // Panel Management
+        function openPanel(section) {
+            const panel = document.getElementById("sidePanel");
+            const content = document.getElementById("panelContent");
+            const dashboardHome = document.getElementById("dashboardHome");
+            
+            // Update active link
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('active');
+                if(link.innerText.includes(section)) link.classList.add('active');
             });
 
-            function generateUsername(fullName) {
-                if (!fullName) return "";
-                const parts = fullName.trim().split(" ");
-                const firstName = parts[0];
-                return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase() + "@123";
+            if (section === "Dashboard") {
+                panel.classList.remove("active");
+                dashboardHome.style.display = "block";
+                loadComplaints();
+                return;
             }
 
-            function createUser(userData) {
-                fetch("/createUsers", {
+            dashboardHome.style.display = "none";
+            panel.classList.add("active");
+
+            switch (section) {
+                case "StudentList":
+                    content.innerHTML = `
+                        <h3 class="fw-800 mb-4">Student Directory</h3>
+                        <div class="table-card p-0 shadow-none">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Mobile</th>
+                                        <th>Parent Mobile</th>
+                                        <th>Due Date</th>
+                                        <th>Room No</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentTableBody"></tbody>
+                            </table>
+                        </div>`;
+                    loadStudents();
+                    break;
+
+                case "AddStudent":
+                    content.innerHTML = `
+                        <h3 class="fw-800 mb-4">Register New Student</h3>
+                        <div class="table-card">
+                            <form id="saveStudent">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Full Name</label>
+                                        <input class="form-control" name="name" placeholder="Enter name" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Mobile Number</label>
+                                        <input class="form-control" name="mobileNumber" placeholder="Enter mobile" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email Id</label>
+                                        <input class="form-control" name="emailid" placeholder="Enter email id" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Parent Mobile</label>
+                                        <input class="form-control" name="parentMobileNumber" placeholder="Enter parent mobile" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Fee Due Date</label>
+                                        <input class="form-control" type="date" name="dueDate" required>
+                                    </div>
+                                    <div class="col-12 mt-4">
+                                        <button id="saveBtn" class="btn btn-primary">Register Student</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>`;
+                    loadAddStudentForm();
+                    break;
+
+                case "Rooms":
+                    content.innerHTML = `
+                        <h3 class="fw-800 mb-4">Add New Room</h3>
+                        <div class="table-card">
+                            <form id="saveRoomForm" method="post" enctype="multipart/form-data" action="/saveRoom">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Room Number</label>
+                                        <input type="text" class="form-control" name="roomNumber" placeholder="e.g. 101" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Room Type</label>
+                                        <select name="type" class="form-select" required>
+                                            <option value="">Select Type</option>
+                                            <option value="single">Single</option>
+                                            <option value="double">Double</option>
+                                            <option value="triple">Triple</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Bed Image</label>
+                                        <input type="file" class="form-control" name="images" required />
+                                        <input type="hidden" name="imageTypes" value="bed" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Bathroom Image</label>
+                                        <input type="file" class="form-control" name="images" required />
+                                        <input type="hidden" name="imageTypes" value="bathroom" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Gallery Image</label>
+                                        <input type="file" class="form-control" name="images" required />
+                                        <input type="hidden" name="imageTypes" value="gallery" />
+                                    </div>
+                                    <div class="col-12 mt-4">
+                                        <button id="saveRoomBtn" type="submit" class="btn btn-primary">Save Room Details</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>`;
+                    loadRoomForm();
+                    break;
+
+                case "VacantRooms":
+                    content.innerHTML = `
+                        <h3 class="fw-800 mb-4">Available Rooms</h3>
+                        <div class="table-card p-0 shadow-none">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Preview</th>
+                                        <th>Room Number</th>
+                                        <th>Type</th>
+                                        <th>Capacity</th>
+                                        <th>Occupied</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="RoomTableBody"></tbody>
+                            </table>
+                        </div>`;
+                    loadVacantRoom();
+                    break;
+
+                case "DuePayments":
+                	content.innerHTML = `
+                        <h3 class="fw-800 mb-4">Student Directory</h3>
+                        <div class="table-card p-0 shadow-none">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Mobile</th>
+                                        <th>Due Date</th>
+                                        <th>Room No</th>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody id="dueStudentTableBody"></tbody>
+                            </table>
+                        </div>`;
+                    loadDueStudents();
+                    break;
+            }
+        }
+
+        function closePanel() {
+            document.getElementById("sidePanel").classList.remove("active");
+            document.getElementById("dashboardHome").style.display = "block";
+            document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+            document.querySelector('.sidebar-link:first-child').classList.add('active');
+        }
+		
+        /* fetch('/dueStudentNames')
+        .then(response => response.json())
+        .then(data => {
+            const content = document.getElementById('dueStudentList');
+            content.innerHTML = "<h3>Students with Pending Payments</h3>";
+            const ul = document.createElement('ul');
+            data.forEach(name => {
+                const li = document.createElement('li');
+                li.textContent = name;
+                ul.appendChild(li);
+            });
+            content.appendChild(ul);
+        })
+        .catch(error => console.error('Error:', error));
+         */
+        function loadComplaints() {
+            fetch("http://localhost:8080/messages")
+                .then(response => response.json())
+                .then(data => {
+                    let complaintsDiv = document.getElementById("complaints");
+                    if (!complaintsDiv) return;
+                    complaintsDiv.innerHTML = "";
+                    let pendingCount = 0;
+                    data.forEach(msg => {
+                        if(msg.status === false) {
+                            pendingCount++;
+                            let item = `
+                                <div class="complaint-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="fw-700 mb-1 text-primary">${msg.studentName} <small class="text-muted ms-2">${new Date(msg.createdAt).toLocaleDateString()}</small></h6>
+                                            <p class="mb-2">${msg.content}</p>
+                                            <span class="badge bg-light text-dark">Room: ${msg.roomNumber}</span>
+                                        </div>
+                                        <button class="btn btn-success btn-sm rounded-pill px-3" onclick="setResolve(${msg.id})">Resolve</button>
+                                    </div>
+                                </div>`;
+                            complaintsDiv.innerHTML += item;
+                        }
+                    });
+                    if(pendingCount === 0) complaintsDiv.innerHTML = '<p class="text-muted">No pending complaints at the moment.</p>';
+                });
+        }
+
+        function setResolve(id) {
+            fetch(`http://localhost:8080/setResolve/${id}`, { method: "POST" })
+                .then(response => response.text())
+                .then(data => {
+                    Swal.fire("Resolved", data, "success");
+                    loadComplaints();
+                });
+        }
+
+        
+
+        async function loadVacantRoom() {
+            const response = await fetch("/getVacantRooms");
+            const rooms = await response.json();
+            const tableBody = document.getElementById("RoomTableBody");
+            let rows = "";
+            rooms.forEach(room => {
+                let imageHTML = (room.images && room.images.length > 0)
+                    ? `<img src="data:image/jpeg;base64,${room.images[0].image}" style="width:60px;height:45px;object-fit:cover;border-radius:8px;">`
+                    : `<span class="text-muted small">No Image</span>`;
+                rows += `
+                    <tr>
+                        <td>${imageHTML}</td>
+                        <td>${room.roomNumber}</td>
+                        <td>${room.type}</td>
+                        <td>${getCapacity(room.type)}</td>
+                        <td>${room.occupied || 0}</td>
+                        <td><span class="badge badge-success">Vacant</span></td>
+                    </tr>`;
+            });
+            tableBody.innerHTML = rows;
+        }
+
+        function getCapacity(type) {
+            switch(type.toLowerCase()){
+                case "single": return 1;
+                case "double": return 2;
+                case "triple": return 3;
+                default: return 1;
+            }
+        }
+	
+        	
+        async function loadStudents() {
+            const response = await fetch("/getAllStudents");
+            const students = await response.json();
+            const tableBody = document.getElementById("studentTableBody");
+            let rows = "";
+            students.forEach(student => {
+                let actionHTML = student.room
+                    ? `<span class="badge badge-success">Allocated</span>`
+                    : `<button class="btn btn-primary btn-sm" onclick="showRooms(${student.id})">Allocate Room</button>`;
+                rows += `
+                    <tr>
+                        <td>${student.name}</td>
+                        <td>${student.mobileNumber}</td>
+                        <td>${student.parentMobileNumber}</td>
+                        <td>${new Date(student.dueDate).toLocaleDateString()}</td>
+                        <td><span class="badge bg-light text-dark">${student.room ? student.room.roomNumber : "N/A"}</span></td>
+                        <td>${actionHTML}</td>
+                    </tr>`;
+            });
+            tableBody.innerHTML = rows;
+        }
+        
+        async function loadDueStudents() {
+            const response = await fetch("/dueStudents");
+            const students = await response.json();
+            const tableBody = document.getElementById("dueStudentTableBody");
+            let rows = "";
+            students.forEach(student => {
+                
+                rows += `
+                    <tr>
+                        <td>${student.name}</td>
+                        <td>${student.mobileNumber}</td>
+                        <td>${new Date(student.dueDate).toLocaleDateString()}</td>
+                        <td><span class="badge bg-light text-dark">${student.roomNumber ? student.roomNumber : "N/A"}</span></td>
+                       
+                    </tr>`;
+            });
+            tableBody.innerHTML = rows;
+        }
+        
+       /*  function loadDueStudents() {
+            fetch('/dueStudents')
+                .then(response => response.json())
+                .then(data => {
+                    const content = document.getElementById('dueStudentList');
+                    content.innerHTML = `
+                        <h3 class="fw-800 mb-4">Payment Tracking</h3>
+                        <div class="table-card p-0 shadow-none">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Mobile Number</th>
+                                        <th>Room</th>
+                                        <th>Due Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="DueStudentsTableBody"></tbody>
+                            </table>
+                        </div>
+                    `;
+
+                    const tableBody = document.getElementById('DueStudentsTableBody');
+                    data.forEach(student => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${student.name}</td>
+                            <td>${student.mobileNumber}</td>
+                            <td>${student.roomNumber || 'N/A'}</td>
+                            <td>${student.roomType || 'N/A'}</td>
+                            <td>${student.roomCapacity || 'N/A'}</td>
+                            <td>${student.dueDate || 'N/A'}</td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                })
+                .catch(error => console.error('Error fetching due students:', error));
+        } */
+        
+        
+        function loadAddStudentForm() {
+            const form = document.getElementById("saveStudent");
+            form.addEventListener("submit", async function (e) {
+                e.preventDefault();
+                const btn = document.getElementById("saveBtn");
+                btn.disabled = true; 
+                btn.innerText = "Processing...";
+                const data = {
+                    name: form.name.value,
+                    mobileNumber: form.mobileNumber.value,
+                    emailid:form.emailid.value,
+                    parentMobileNumber: form.parentMobileNumber.value,
+                    dueDate: form.dueDate.value
+                };
+                await fetch("/saveStudentForm", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(userData)
-                })
-                .then(res => res.json())
-                .then(data => console.log("User created:", data))
-                .catch(err => console.error("User creation failed:", err));
-            }
-            break;
-    }
+                    body: JSON.stringify(data)
+                });
+                Swal.fire("Success", "Student registered successfully", "success");
+                form.reset();
+                btn.disabled = false; 
+                btn.innerText = "Register Student";
+            });
+        }
 
-    panel.classList.add('active');
-}
+        function loadRoomForm() {
+            const form = document.getElementById("saveRoomForm");
+            form.addEventListener("submit", async function(e) {
+                e.preventDefault();
+                const saveBtn = document.getElementById("saveRoomBtn");
+                saveBtn.disabled = true; saveBtn.innerText = "Saving...";
+                const formData = new FormData(form);
+                try {
+                    const response = await fetch("/saveRoom", { method: "POST", body: formData });
+                    const result = await response.text();
+                    Swal.fire("Success", result, "success");
+                    form.reset();
+                } catch(err) { Swal.fire("Error", "Failed to save room", "error"); }
+                saveBtn.disabled = false; saveBtn.innerText = "Save Room Details";
+            });
+        }
 
-function closePanel() {
-    document.getElementById('sidePanel').classList.remove('active');
-}
+        async function showRooms(studentId) {
+            const response = await fetch("/getVacantRooms");
+            const rooms = await response.json();
+            let html = `<div class="row g-3">`;
+            rooms.forEach(room => {
+                let carouselId = "carousel" + room.roomId;
+                let imagesHTML = "";
+                if (room.images && room.images.length > 0) {
+                    imagesHTML += `<div id="${carouselId}" class="carousel slide" data-bs-ride="carousel"><div class="carousel-inner">`;
+                    room.images.forEach((img, index) => {
+                        imagesHTML += `<div class="carousel-item ${index === 0 ? 'active' : ''}"><img src="data:image/jpeg;base64,${img.image}" style="width:100%; height:120px; object-fit:cover; border-radius:12px;"></div>`;
+                    });
+                    imagesHTML += `</div></div>`;
+                } else { imagesHTML = `<div class="bg-light d-flex align-items-center justify-content-center" style="height:120px; border-radius:12px;"><i class="fas fa-image text-muted"></i></div>`; }
+                
+                html += `
+                    <div class="col-md-4">
+                        <div class="stat-card p-3 text-center">
+                            ${imagesHTML}
+                            <h6 class="mt-3 mb-1">Room ${room.roomNumber}</h6>
+                            <p class="small text-muted mb-3">${room.type} (${getCapacity(room.type)})</p>
+                            <button class="btn btn-primary btn-sm w-100" onclick="allocateRoom(${studentId}, ${room.roomId})">Select</button>
+                        </div>
+                    </div>`;
+            });
+            html += `</div>`;
+            Swal.fire({ title: "Choose a Room", html: html, width: 800, showConfirmButton: false });
+        }
 
-window.onload = function() {
-    openPanel('Dashboard');
-};
-</script>
+        async function allocateRoom(studentId, roomId) {
+            const response = await fetch(`/allocateRoom?studentId=${studentId}&roomId=${roomId}`, { method: "POST" });
+            const result = await response.text();
+            Swal.fire("Success", result, "success");
+            loadStudents();
+        }
+
+        window.onload = function () {
+            loadComplaints();
+            setTimeout(connectAdminSocket, 300);
+        };
+    </script>
 </body>
 </html>

@@ -1,23 +1,16 @@
 package com.ss.student;
 
 import java.time.LocalDate;
-import org.hibernate.annotations.CreationTimestamp;
 
 import com.ss.address.Address;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.Version;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.ss.rooms.Rooms;
+
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
-@Data
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Students {
@@ -28,23 +21,26 @@ public class Students {
 
     private String name;
     private Long mobileNumber;
-    private Long parentMobileNumber; // fixed typo
+    private Long parentMobileNumber;
 
     @Embedded
     private Address address;
 
-    @CreationTimestamp
     @Column(updatable = false)
-    private LocalDate dateOfJoining;
+    private LocalDate dateOfJoining = LocalDate.now();
 
     private LocalDate dueDate;
 
     @Version
-    private Long countOfDue; 
-    
+    private Long countOfDue;
+
     @Lob
     private byte[] aadharCard;
-    
+
     @Lob
     private byte[] panCard;
+
+    @ManyToOne
+    @JoinColumn(name = "room_id")
+    private Rooms room;
 }

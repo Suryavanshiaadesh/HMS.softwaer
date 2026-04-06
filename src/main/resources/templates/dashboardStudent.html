@@ -1,10 +1,505 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
-<title>Insert title here</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Dashboard - Aadis Hostel</title>
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+	rel="stylesheet">
+<link
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+	rel="stylesheet">
+<link
+	href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+	rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script
+	src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<style>
+:root {
+	--primary: #4361ee;
+	--secondary: #3f37c9;
+	--accent: #4cc9f0;
+	--text-dark: #1b2559;
+	--text-muted: #a3aed0;
+	--bg-light: #f4f7fe;
+	--card-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+	--transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+	background-color: var(--bg-light);
+	font-family: 'Plus Jakarta Sans', sans-serif;
+	color: var(--text-dark);
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	margin: 0;
+}
+
+.dashboard-container {
+	width: 100%;
+	max-width: 480px;
+	animation: slideUp 0.6s ease-out;
+}
+
+
+keyframes slideUp {from { opacity:0;
+	transform: translateY(30px);
+}
+
+to {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+}
+.id-card {
+	background: white;
+	border-radius: 30px;
+	box-shadow: var(--card-shadow);
+	overflow: hidden;
+	border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.card-header-custom {
+	background: linear-gradient(135deg, var(--primary), var(--secondary));
+	padding: 40px 20px;
+	text-align: center;
+	color: white;
+	position: relative;
+}
+
+.card-header-custom h4 {
+	font-weight: 800;
+	margin: 0;
+	letter-spacing: -0.5px;
+	font-size: 24px;
+}
+
+.card-header-custom p {
+	opacity: 0.8;
+	font-size: 14px;
+	margin-top: 5px;
+	font-weight: 500;
+}
+
+.profile-section {
+	text-align: center;
+	margin-top: -50px;
+	padding: 0 20px 20px;
+	position: relative;
+	z-index: 2;
+}
+
+.profile-img-container {
+	position: relative;
+	display: inline-block;
+}
+
+.profile-img {
+	width: 110px;
+	height: 110px;
+	border-radius: 30px;
+	object-fit: cover;
+	border: 5px solid white;
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+	background: white;
+}
+
+.status-badge {
+	position: absolute;
+	bottom: -10px;
+	left: 50%;
+	transform: translateX(-50%);
+	background: #05cd99;
+	color: white;
+	padding: 6px 16px;
+	border-radius: 100px;
+	font-size: 12px;
+	font-weight: 700;
+	box-shadow: 0 4px 10px rgba(5, 205, 153, 0.3);
+	white-space: nowrap;
+	border: 3px solid white;
+}
+
+.profile-name {
+	margin-top: 25px;
+	font-size: 22px;
+	font-weight: 800;
+	color: var(--text-dark);
+}
+
+.info-section {
+	padding: 10px 30px 30px;
+}
+
+.info-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 15px;
+	margin-top: 10px;
+}
+
+.info-item {
+	background: #f8faff;
+	padding: 15px;
+	border-radius: 20px;
+	transition: var(--transition);
+	border: 1px solid transparent;
+}
+
+.info-item:hover {
+	background: white;
+	border-color: var(--primary);
+	transform: translateY(-3px);
+	box-shadow: 0 10px 20px rgba(67, 97, 238, 0.05);
+}
+
+.info-label {
+	display: block;
+	color: var(--text-muted);
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	margin-bottom: 4px;
+}
+
+.info-value {
+	display: block;
+	color: var(--text-dark);
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.full-width {
+	grid-column: span 2;
+}
+
+.actions-section {
+	padding: 0 30px 35px;
+	display: flex;
+	gap: 15px;
+}
+
+.btn-custom {
+	flex: 1;
+	padding: 14px;
+	border-radius: 16px;
+	font-weight: 700;
+	font-size: 15px;
+	transition: var(--transition);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+}
+
+.btn-pay {
+	background: var(--primary);
+	color: white;
+	border: none;
+	box-shadow: 0 10px 20px rgba(67, 97, 238, 0.2);
+}
+
+.btn-pay:hover {
+	background: var(--secondary);
+	transform: translateY(-3px);
+	box-shadow: 0 15px 25px rgba(67, 97, 238, 0.3);
+	color: white;
+}
+
+.btn-complaint {
+	background: #fff;
+	color: #ee5d50;
+	border: 2px solid #fdeef1;
+}
+
+.btn-complaint:hover {
+	background: #fdeef1;
+	transform: translateY(-3px);
+	color: #ee5d50;
+}
+
+.footer-note {
+	text-align: center;
+	margin-top: 20px;
+	color: var(--text-muted);
+	font-size: 13px;
+	font-weight: 500;
+}
+</style>
+
 </head>
 <body>
-<h1>hello from Student Dashboard</h1>
+
+	<div class="dashboard-container">
+		<div class="id-card">
+			<!-- Header -->
+			<div class="card-header-custom">
+				<h4>Student Portal</h4>
+				<p>Aadis Hostel Management System</p>
+			</div>
+
+			<!-- Profile -->
+			<div class="profile-section">
+				<div class="profile-img-container">
+					<img src="/assets/user_image.jpg" class="profile-img" alt="Profile">
+					<div class="status-badge" id="paymentStatusBadge">
+    <i class="fas fa-times-circle me-1" id="paymentStatusIcon"></i>
+    <span id="paymentStatusText">Unpaid</span>
+</div>
+				</div>
+				<div class="profile-name" th:text="${logged_user.name}">Student
+					Name</div>
+			</div>
+
+			<!-- Info Grid -->
+			<div class="info-section">
+				<div class="info-grid">
+					<div class="info-item full-width">
+						<span class="info-label">Mobile Number</span> <span
+							class="info-value" th:text="${logged_user.mobileNumber}">+91
+							00000 00000</span>
+					</div>
+
+					<div class="info-item">
+						<span class="info-label">Room Number</span> <span
+							class="info-value"
+							th:text="${logged_user.room != null ? logged_user.room.roomNumber : 'N/A'}">101</span>
+					</div>
+
+					<div class="info-item">
+						<span class="info-label">Room Type</span> <span class="info-value"
+							th:text="${logged_user.room != null ? logged_user.room.type : 'N/A'}">Single</span>
+					</div>
+
+					<div class="info-item">
+						<span class="info-label">Joining Date</span> <span
+							class="info-value" th:text="${logged_user.dateOfJoining}">2024-01-01</span>
+					</div>
+
+					<div class="info-item">
+						<span class="info-label">Due Date</span> <span class="info-value"
+							th:text="${logged_user.dueDate}">2024-04-01</span>
+					</div>
+
+					<div class="info-item full-width">
+						<span class="info-label">Parent Contact</span> <span
+							class="info-value" th:text="${logged_user.parentMobileNumber}">+91
+							00000 00000</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Actions -->
+			<div class="actions-section">
+				<button class="btn btn-pay btn-custom"
+					th:onclick="'generatePayment(' + ${logged_user.id} + ',' + ${logged_user.room.price} + ')'">
+					<i class="fas fa-credit-card"></i> Pay Now
+				</button>
+				<button class="btn btn-complaint btn-custom"
+					onclick="openComplaint()">
+					<i class="fas fa-exclamation-circle"></i> Complaint
+				</button>
+			</div>
+		</div>
+
+		<div class="footer-note">
+			<i class="fas fa-shield-alt me-1"></i> Secure Student Dashboard
+		</div>
+	</div>
+
+	<script type="text/javascript">
+
+let month = new Date().toLocaleString('default', { month: 'long' });
+
+$(document).ready(function () {
+    $("#paymentStatusText").text(month + " Unpaid");
+});
+
+function generatePayment(studentId, price) {
+
+    $.post("/createOrder", {
+
+        studentId: studentId,
+        amount: price
+
+    }).done(function(order) {
+
+        order = JSON.parse(order);
+
+        var options = {
+
+            key: "rzp_test_RkTTWx2e807ofs",
+            amount: order.amount,
+            currency: "INR",
+            order_id: order.id,
+
+            name: "Aadis Hostel",
+            description: "Room Payment",
+
+            handler: function (response) {
+
+                verifyPayment(
+                    response.razorpay_order_id,
+                    response.razorpay_payment_id,
+                    response.razorpay_signature,
+                    studentId,
+                    price,
+                    "SUCCESS"
+                );
+            },
+
+            modal: {
+
+                ondismiss: function() {
+
+                    verifyPayment(
+                        order.id,
+                        "FAILED",
+                        "FAILED",
+                        studentId,
+                        price,
+                        "CANCELLED"
+                    );
+                }
+            }
+        };
+
+        var rzp = new Razorpay(options);
+        rzp.open();
+    });
+}
+
+function verifyPayment(
+        orderId,
+        paymentId,
+        signature,
+        studentId,
+        amount,
+        status
+) {
+
+    $.post("/verify", {
+
+        orderId: orderId,
+        paymentId: paymentId,
+        signature: signature,
+        studentId: studentId,
+        amount: amount,
+        status: status
+
+    }).done(function() {
+
+        if (status === "SUCCESS") {
+
+            $("#paymentStatusBadge").css("background", "#05cd99");
+
+            $("#paymentStatusIcon")
+                .removeClass("fa-times-circle")
+                .addClass("fa-check-circle");
+
+            $("#paymentStatusText")
+                .text(month + " Paid");
+
+            Swal.fire({
+                icon: "success",
+                title: "Payment Successful",
+                text: "Your hostel fee is paid",
+                confirmButtonColor: "#4361ee"
+            });
+
+        } else {
+
+            $("#paymentStatusBadge").css("background", "#ee5d50");
+
+            $("#paymentStatusIcon")
+                .removeClass("fa-check-circle")
+                .addClass("fa-times-circle");
+
+            $("#paymentStatusText")
+                .text(month + " Unpaid");
+
+            Swal.fire({
+                icon: "error",
+                title: "Payment Failed",
+                text: "Payment cancelled or failed"
+            });
+        }
+    });
+}
+
+/* ================= WebSocket ================= */
+
+let stompClient = null;
+
+function connect() {
+
+    if (stompClient !== null && stompClient.connected) {
+        return;
+    }
+
+    let socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
+    stompClient.debug = null;
+
+    stompClient.connect({}, function() {
+
+        stompClient.subscribe('/topic/messages', function(data) {
+
+            console.log("Message received:", data.body);
+
+        });
+
+    }, function() {
+
+        setTimeout(connect, 5000);
+    });
+}
+
+window.onload = function () {
+    connect();
+};
+
+function openComplaint() {
+
+    Swal.fire({
+        title: "Raise Complaint",
+        input: "textarea",
+        inputLabel: "Describe your issue",
+        showCancelButton: true,
+        confirmButtonText: "Submit Complaint",
+        confirmButtonColor: "#4361ee"
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            let message = {
+                sender: "Student",
+                content: result.value
+            };
+
+            stompClient.send("/app/send", {}, JSON.stringify(message));
+
+            Swal.fire(
+                "Submitted!",
+                "Complaint sent to manager",
+                "success"
+            );
+        }
+    });
+}
+
+connect();
+
+</script>
 </body>
 </html>
